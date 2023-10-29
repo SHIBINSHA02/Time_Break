@@ -12,26 +12,29 @@ SHORT_BREAK_MIN = 5
 LONG_BREAK_MIN = 20
 reps = 0
 ontime = "pause"
-current_timer = None  # Initialize the current_timer
+current_timer = None
+active = False
 
 # Timer Reset
 def reset():
+    global reps, ontime, current_timer, active
+    if ontime == "running":
+        root.after_cancel(current_timer)
     canvas.itemconfig(timer_text, text="00:00")
-    global reps, ontime, current_timer
     headLabel.config(text="Timer", fg=GREEN)
     reps = 0
     ontime = "pause"
-    if current_timer is not None:
-        root.after_cancel(current_timer)
-    current_timer = None  # Reset the current_timer
+    current_timer = None
+    active = False
 
 # Timer Mechanism
 def starttime():
-    global reps, ontime, current_timer
-    if current_timer is not None:
-        root.after_cancel(current_timer)  # Cancel the current timer
+    global reps, ontime, current_timer, active
+    if ontime == "running":
+        root.after_cancel(current_timer)
     ontime = "running"
     reps += 1
+    print(reps)
     if reps % 8 == 0:
         current_timer = count_down(LONG_BREAK_MIN * 60)
         headLabel.config(text="Long Break", fg=RED)
@@ -41,11 +44,12 @@ def starttime():
     else:
         headLabel.config(text="Work", fg=GREEN)
         current_timer = count_down(WORK_MIN * 60)
+    active = True
 
 # Countdown Mechanism
 def count_down(count):
-    global ontime, current_timer
-    if ontime == "running":
+    global ontime, current_timer, active
+    if ontime == "running" :
         sec = count % 60
         if sec < 10:
             sec = f"0{sec}"
@@ -54,12 +58,9 @@ def count_down(count):
         canvas.itemconfig(timer_text, text=f"{math.floor(count / 60)}:{sec}")
         if count > 0:
             current_timer = root.after(1000, count_down, count - 1)
-    elif ontime == "pause":
-        # Handle pause by doing nothing
-        pass
     else:
-        # Handle stop by resetting the timer
         canvas.itemconfig(timer_text, text="00:00")
+        active = False
 
 # UI Setup
 root = Tk()
